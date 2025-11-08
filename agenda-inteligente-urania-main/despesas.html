@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Despesas - Custos e Orçamentos</title>
+    <link rel="stylesheet" href="public/css/main-responsive.css">
+    <link rel="stylesheet" href="public/css/style.css">
+    <link rel="stylesheet" href="public/css/docs-urania.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Fundo galáctico (coeso com a Agenda Urânia) -->
+    <div class="space-layer stars"></div>
+    <div class="space-layer twinkle"></div>
+    <div class="space-layer nebula"></div>
+    <div class="space-layer galaxies"></div>
+
+    <div class="container">
+        <header>
+            <h1>💰 Gestão de Despesas</h1>
+            <p class="subtitle">Cálculo de custos e orçamentos por astrônomo</p>
+        </header>
+        
+        <div class="navigation">
+            <a href="index.html" class="nav-button"><i class="fas fa-calendar-alt"></i> Agenda</a>
+            <a href="feedbacks.html" class="nav-button"><i class="fas fa-comment-dots"></i> Feedbacks</a>
+            <a href="despesas.html" class="nav-button active"><i class="fas fa-file-invoice-dollar"></i> Despesas</a>
+            <a href="historico.html" class="nav-button"><i class="fas fa-history"></i> Históricos</a>
+            <a href="account.html" class="nav-button"><i class="fas fa-user-astronaut"></i> Minha Conta</a>
+            <a href="login.html" class="nav-button"><i class="fas fa-right-to-bracket"></i> Entrar</a>
+        </div>
+        
+        <div class="webhook-status" id="webhook-status">
+            <div class="result-item">
+                <span class="result-label">Webhook:</span>
+                <span class="result-value">https://urania-planetario-n8n.mmjkgs.easypanel.host/webhook/agenda-astronomos</span>
+            </div>
+            <div class="result-item">
+                <span class="result-label">Status:</span>
+                <span class="result-value" id="connection-status">Pronto para buscar dados</span>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <div class="data-source">
+                <button class="source-button active" id="btn-fetch-data">
+                    <i class="fas fa-sync-alt"></i> Buscar Dados do n8n
+                </button>
+                <button class="source-button" id="btn-fetch-averages">
+                    <i class="fas fa-chart-line"></i> Obter Médias
+                </button>
+            </div>
+            
+            <div class="astronomer-selector">
+                <select class="filter-select" id="astronomer-select">
+                    <option value="">Selecione um astrônomo</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-value" id="total-expenses">R$ 0</div>
+                <div class="stat-label">Custo Total por Evento</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="fuel-cost">R$ 0</div>
+                <div class="stat-label">Custo Combustível</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="lodging-cost">R$ 0</div>
+                <div class="stat-label">Hospedagem</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="profit-margin">0%</div>
+                <div class="stat-label">Margem de Lucro</div>
+            </div>
+        </div>
+        
+        <div class="main-content">
+            <section class="expenses-section">
+                <h2 class="section-title">
+                    <i class="fas fa-money-bill-wave"></i>
+                    Despesas do Astrônomo
+                </h2>
+                
+                <div class="expense-grid" id="expense-grid">
+                    <div class="empty-state">
+                        <i class="fas fa-calculator"></i>
+                        <p>Selecione um astrônomo para ver as despesas</p>
+                    </div>
+                </div>
+            </section>
+            
+            <section class="calculations-section">
+                <h2 class="section-title">
+                    <i class="fas fa-calculator"></i>
+                    Cálculo de Orçamento
+                </h2>
+                
+                <div class="calculation-form">
+                    <div class="form-group">
+                        <label class="form-label" for="event-value">Valor do Evento (R$):</label>
+                        <input type="number" class="form-input" id="event-value" placeholder="Digite o valor do evento">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="distance">Distância do Evento (km):</label>
+                        <input type="number" class="form-input" id="distance" placeholder="Distância em quilômetros">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="days">Número de Diárias:</label>
+                        <input type="number" class="form-input" id="days" value="1" min="1">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="students">Número de Alunos:</label>
+                        <input type="number" class="form-input" id="students" value="0">
+                    </div>
+                    
+                    <button class="source-button" id="btn-calculate">
+                        <i class="fas fa-calculator"></i> Calcular Orçamento
+                    </button>
+                </div>
+                
+                <div class="calculation-results" id="calculation-results" style="display: none;">
+                    <h3 style="color: #ffcc80; margin-bottom: 15px;">Resultado do Cálculo</h3>
+                    <div class="result-item">
+                        <span class="result-label">Valor do Evento:</span>
+                        <span class="result-value" id="result-event-value">R$ 0,00</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">Custo Combustível:</span>
+                        <span class="result-value" id="result-fuel">R$ 0,00</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">Custo Hospedagem:</span>
+                        <span class="result-value" id="result-lodging">R$ 0,00</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">Alimentação:</span>
+                        <span class="result-value" id="result-food">R$ 0,00</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">Monitor:</span>
+                        <span class="result-value" id="result-monitor">R$ 0,00</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">Pedágios:</span>
+                        <span class="result-value" id="result-tolls">R$ 0,00</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">Custo Total:</span>
+                        <span class="result-value" id="result-total-cost">R$ 0,00</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">Lucro Líquido:</span>
+                        <span class="result-value" id="result-profit">R$ 0,00</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">Margem de Lucro:</span>
+                        <span class="result-value" id="result-margin">0%</span>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+    
+    <div class="notification" id="notification"></div>
+
+    <script>
+        // Elementos DOM
+        const expenseGrid = document.getElementById('expense-grid');
+        const astronomerSelect = document.getElementById('astronomer-select');
+        const notification = document.getElementById('notification');
+        const connectionStatus = document.getElementById('connection-status');
+        const webhookStatus = document.getElementById('webhook-status');
+        const btnFetchData = document.getElementById('btn-fetch-data');
+        const btnFetchAverages = document.getElementById('btn-fetch-averages');
+        const btnCalculate = document.getElementById('btn-calculate');
+        const calculationResults = document.getElementById('calculation-results');
+        
+        // Elementos de estatísticas
+        const totalExpensesElement = document.getElementById('total-expenses');
+        const fuelCostElement = document.getElementById('fuel-cost');
+        const lodgingCostElement = document.getElementById('lodging-cost');
+        const profitMarginElement = document.getElementById('profit-margin');
+        
+        // Elementos do formulário
+        const eventValueInput = document.getElementById('event-value');
+        const distanceInput = document.getElementById('distance');
+        const daysInput = document.getElementById('days');
+        const studentsInput = document.getElementById('students');
+        
+        // Elementos dos resultados
+        const resultEventValue = document.getElementById('result-event-value');
+        const resultFuel = document.getElementById('result-fuel');
+        const resultLodging = document.getElementById('result-lodging');
+        const resultFood = document.getElementById('result-food');
+        const resultMonitor = document.getElementById('result-monitor');
+        const resultTolls = document.getElementById('result-tolls');
+        const resultTotalCost = document.getElementById('result-total-cost');
+        const resultProfit = document.getElementById('result-profit');
+        const resultMargin = document.getElementById('result-margin');
+
+        // Configuração do Webhook (novo endpoint único)
+        const AGENDA_WEBHOOK_URL = 'https://urania-planetario-n8n.mmjkgs.easypanel.host/webhook/agenda-astronomos';
+
+        // Utilitários de URL/Webhook
+        function buildUrl(base, params){
+            const usp = new URLSearchParams();
+            Object.entries(params||{}).forEach(([k,v])=>{ if (v!==undefined && v!==null) usp.append(k, String(v)); });
+            const sep = base.includes('?') ? '&' : '?';
+            return base + sep + usp.toString();
+        }
+        async function callAgendaWebhook(action, params){
+            const url = buildUrl(AGENDA_WEBHOOK_URL, { action, ...(params||{}) });
+            const resp = await fetch(url, { method:'GET', headers:{ 'Accept':'application/json' } });
+            if (!resp.ok) throw new Error(`Erro HTTP ${resp.status}`);
+            try{ return await resp.json(); }catch(_){ return null; }
+        }
+
+        // Estado da aplicação
+        let eventsData = [];
+        let astronomersData = [];
+        let selectedAstronomer = null;
+        let currentExpenses = {};
+
+        // Helpers de sessão e filtro por usuário
+        function getLoggedSession(){
+            try{
+                const raw = localStorage.getItem('astronomo_session');
+                const s = raw ? JSON.parse(raw) : null;
+                if (s && s.loggedIn) return s;
+            }catch(_){ }
+            return null;
+        }
+        function norm(v){ return String(v||'').trim().toLowerCase(); }
+        function belongsToSession(item, s){
+            if (!s) return false;
+            const sid = item.assistant_id ?? item.ASSISTANT_ID;
+            const iid = item.id_astronomo ?? item.idAstronomo;
+            const u = item.usuario ?? item.USERNAME;
+            const a = item.astronomo ?? item.astronomo_validacao;
+            if (s.assistant_id != null && String(s.assistant_id) === String(sid)) return true;
+            if (s.id_astronomo != null && String(s.id_astronomo) === String(iid)) return true;
+            const su = norm(s.username);
+            const sn = norm(s.nome_completo);
+            if (u && norm(u).includes(su)) return true;
+            if (a && (norm(a).includes(su) || (sn && norm(a).includes(sn)))) return true;
+            return false;
+        }
+
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', function() {
+            // Event Listeners
+            astronomerSelect.addEventListener('change', handleAstronomerSelect);
+            btnFetchData.addEventListener('click', fetchDataFromN8N);
+            btnFetchAverages.addEventListener('click', fetchAveragesData);
+            btnCalculate.addEventListener('click', calculateBudget);
+
+            // Preseleciona/força o usuário logado no seletor
+            const s = getLoggedSession();
+            if (s) {
+                astronomerSelect.innerHTML = '';
+                const opt = document.createElement('option');
+                opt.value = s.username || s.usuario || (s.nome_completo || '');
+                opt.textContent = s.nome_completo || s.username || s.usuario || 'Meu usuário';
+                opt.selected = true;
+                astronomerSelect.appendChild(opt);
+                astronomerSelect.disabled = true; // trava seleção em um usuário
+            }
+        });
+
+        // ========== FUNÇÃO PRINCIPAL - BUSCAR DADOS DO n8n ==========
+
+        async function fetchDataFromN8N() {
+            try {
+                btnFetchData.disabled = true;
+                btnFetchData.innerHTML = '<span class="loading"></span> Buscando dados...';
+                connectionStatus.textContent = 'Conectando ao n8n...';
+                webhookStatus.classList.remove('status-connected', 'status-error', 'status-warning');
+
+                const s = getLoggedSession();
+                const data = await callAgendaWebhook('atualizar_agenda', s?.id_astronomo != null ? { id_astronomo: s.id_astronomo } : {});
+                console.log('Dados recebidos do n8n:', data);
+                
+                // Processar os dados recebidos
+                if (Array.isArray(data)) {
+                    eventsData = data;
+                } else if (typeof data === 'object') {
+                    eventsData = [data];
+                } else {
+                    throw new Error('Formato de dados inválido recebido do n8n');
+                }
+
+                // Filtrar os eventos pelo usuário logado
+                const session = getLoggedSession();
+                if (session) {
+                    eventsData = eventsData.filter(ev => belongsToSession(ev, session));
+                }
+
+                // Extrair dados dos astrônomos
+                extractAstronomersData();
+                
+                connectionStatus.textContent = `Conectado - ${eventsData.length} eventos carregados`;
+                webhookStatus.classList.add('status-connected');
+                showNotification(`${eventsData.length} eventos carregados com sucesso!`, 'success');
+                
+            } catch (error) {
+                console.error('Erro ao buscar dados do n8n:', error);
+                connectionStatus.textContent = `Erro: ${error.message}`;
+                webhookStatus.classList.add('status-error');
+                showNotification(`Erro ao carregar dados: ${error.message}`, 'error');
+            } finally {
+                btnFetchData.disabled = false;
+                btnFetchData.innerHTML = '<i class="fas fa-sync-alt"></i> Buscar Dados';
+            }
+        }
+
+        // ========== BUSCAR DADOS DE MÉDIAS ==========
+
+        async function fetchAveragesData() {
+            try {
+                btnFetchAverages.disabled = true;
+                btnFetchAverages.innerHTML = '<span class="loading"></span> Buscando médias...';
+                const s = getLoggedSession();
+                if (!s?.id_astronomo){ throw new Error('Sessão inválida: sem id_astronomo'); }
+                const data = await callAgendaWebhook('medias', { id_astronomo: s.id_astronomo });
+                astronomersData = Array.isArray(data) ? data : (data ? [data] : []);
+                updateAstronomerAverages();
+                showNotification('Médias carregadas com sucesso.', 'success');
+            } catch (error) {
+                console.error('Erro ao buscar dados de médias:', error);
+                showNotification('Erro ao carregar médias.', 'error');
+            } finally {
+                btnFetchAverages.disabled = false;
+                btnFetchAverages.innerHTML = '<i class="fas fa-chart-line"></i> Obter Médias';
+            }
+        }
+
+        // ========== EXTRAIR DADOS DOS ASTRÔNOMOS ==========
+
+        function extractAstronomersData() {
+            const astronomersMap = new Map();
+            
+            eventsData.forEach(event => {
+                const astronomo = event.astronomo || event.astronomo_validacao;
+                if (astronomo && !astronomersMap.has(astronomo)) {
+                    astronomersMap.set(astronomo, {
+                        nome_completo: astronomo,
+                        usuario: astronomo,
+                        cidade_base: event.cidade_base || 'Não informada',
+                        veiculo: event.veiculo || 'Não informado',
+                        combustivel: event.combustivel || 'Não informado',
+                        valor_litro: parseFloat(event.valor_litro) || null,
+                        diaria_hospedagem: parseFloat(event.diaria_hospedagem) || null,
+                        alimentacao_diaria: parseFloat(event.alimentacao_diaria) || null,
+                        monitor: parseFloat(event.monitor) || null,
+                        pedagios: parseFloat(event.pedagios) || null,
+                        consumo_km_l: parseFloat(event.consumo_km_l) || null
+                    });
+                }
+            });
+            
+            astronomersData = Array.from(astronomersMap.values());
+            // Restringe ao usuário logado
+            const s = getLoggedSession();
+            if (s) {
+                const su = norm(s.username);
+                const sn = norm(s.nome_completo);
+                astronomersData = astronomersData.filter(a => norm(a.usuario).includes(su) || norm(a.nome_completo).includes(sn));
+                if (!astronomersData.length) {
+                    astronomersData = [{ usuario: s.username || su, nome_completo: s.nome_completo || s.username || 'Meu usuário' }];
+                }
+            }
+            populateAstronomerSelect();
+        }
+        
+        function populateAstronomerSelect() {
+            astronomerSelect.innerHTML = '';
+            
+            astronomersData.forEach(astronomer => {
+                const option = document.createElement('option');
+                option.value = astronomer.usuario;
+                option.textContent = `${astronomer.nome_completo} - ${astronomer.cidade_base}`;
+                option.selected = true;
+                astronomerSelect.appendChild(option);
+            });
+            if (astronomersData.length <= 1) { astronomerSelect.disabled = true; }
+        }
+
+        function updateAstronomerAverages() {
+            astronomersData.forEach(astronomer => {
+                const averageData = astronomersData.find(avg => avg.usuario === astronomer.usuario);
+                if (averageData) {
+                    // Atualizar com dados de média se disponíveis
+                    astronomer.gasto_combustivel_media = averageData.gasto_combustivel_media;
+                    astronomer.diaria_hospedagem_media = averageData.diaria_hospedagem_media;
+                    astronomer.alimentacao_diaria_media = averageData.alimentacao_diaria_media;
+                    astronomer.monitor_media = averageData.monitor_media;
+                    astronomer.pedagios_media = averageData.pedagios_media;
+                    astronomer.outros_media = averageData.outros_media;
+                    astronomer.custo_total_medio = averageData.custo_total_medio;
+                }
+            });
+            
+            // Se um astrônomo estiver selecionado, atualizar a exibição
+            if (selectedAstronomer) {
+                displayExpenses(selectedAstronomer);
+            }
+        }
+
+        // ========== SELEÇÃO DE ASTRÔNOMO ==========
+
+        // ========== SELEÇÃO DE ASTRÔNOMO ==========
+        function handleAstronomerSelect(e) {
+            const astronomerUser = e.target.value;
+            selectedAstronomer = astronomersData.find(a => a.usuario === astronomerUser);
+            
+            if (selectedAstronomer) {
+                displayExpenses(selectedAstronomer);
+                calculationResults.style.display = 'none';
+            } else {
+                expenseGrid.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-calculator"></i>
+                        <p>Selecione um astrônomo para ver as despesas</p>
+                    </div>
+                `;
+            }
+        }
+
+        // ========== EXIBIÇÃO DE DESPESAS ==========
+
+        function displayExpenses(astronomer) {
+            const expenses = calculateExpenses(astronomer);
+            currentExpenses = expenses;
+            
+            expenseGrid.innerHTML = `
+                <div class="expense-card fixed">
+                    <div class="expense-header">
+                        <div class="expense-title">Combustível</div>
+                        <div class="expense-value">R$ ${expenses.fuel.cost.toFixed(2)}/km</div>
+                    </div>
+                    <div class="expense-details">
+                        <div>Veículo: ${astronomer.veiculo}</div>
+                        <div>Combustível: ${astronomer.combustivel}</div>
+                        <div class="value-comparison">
+                            <span class="fixed-value ${expenses.fuel.source === 'fixed' ? 'in-use' : ''}">
+                                Fixo: R$ ${expenses.fuel.fixedValue || '0.00'}/km
+                            </span>
+                            <span class="average-value ${expenses.fuel.source === 'average' ? 'in-use' : ''}">
+                                Média: R$ ${expenses.fuel.averageValue || '0.00'}/km
+                            </span>
+                        </div>
+                        <div class="expense-source ${expenses.fuel.source === 'fixed' ? 'source-fixed' : 'source-average'}">
+                            ${expenses.fuel.source === 'fixed' ? 'Valor Fixo' : 'Média Aplicada'}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="expense-card ${expenses.lodging.source}">
+                    <div class="expense-header">
+                        <div class="expense-title">Hospedagem</div>
+                        <div class="expense-value">R$ ${expenses.lodging.cost.toFixed(2)}/dia</div>
+                    </div>
+                    <div class="expense-details">
+                        <div>Diária de hospedagem</div>
+                        <div class="value-comparison">
+                            <span class="fixed-value ${expenses.lodging.source === 'fixed' ? 'in-use' : ''}">
+                                Fixo: R$ ${expenses.lodging.fixedValue || '0.00'}/dia
+                            </span>
+                            <span class="average-value ${expenses.lodging.source === 'average' ? 'in-use' : ''}">
+                                Média: R$ ${expenses.lodging.averageValue || '0.00'}/dia
+                            </span>
+                        </div>
+                        <div class="expense-source ${expenses.lodging.source === 'fixed' ? 'source-fixed' : 'source-average'}">
+                            ${expenses.lodging.source === 'fixed' ? 'Valor Fixo' : 'Média Aplicada'}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="expense-card ${expenses.food.source}">
+                    <div class="expense-header">
+                        <div class="expense-title">Alimentação</div>
+                        <div class="expense-value">R$ ${expenses.food.cost.toFixed(2)}/dia</div>
+                    </div>
+                    <div class="expense-details">
+                        <div>Despesas com alimentação</div>
+                        <div class="value-comparison">
+                            <span class="fixed-value ${expenses.food.source === 'fixed' ? 'in-use' : ''}">
+                                Fixo: R$ ${expenses.food.fixedValue || '0.00'}/dia
+                            </span>
+                            <span class="average-value ${expenses.food.source === 'average' ? 'in-use' : ''}">
+                                Média: R$ ${expenses.food.averageValue || '0.00'}/dia
+                            </span>
+                        </div>
+                        <div class="expense-source ${expenses.food.source === 'fixed' ? 'source-fixed' : 'source-average'}">
+                            ${expenses.food.source === 'fixed' ? 'Valor Fixo' : 'Média Aplicada'}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="expense-card ${expenses.monitor.source}">
+                    <div class="expense-header">
+                        <div class="expense-title">Monitor</div>
+                        <div class="expense-value">R$ ${expenses.monitor.cost.toFixed(2)}/evento</div>
+                    </div>
+                    <div class="expense-details">
+                        <div>Custo do monitor/ajudante</div>
+                        <div class="value-comparison">
+                            <span class="fixed-value ${expenses.monitor.source === 'fixed' ? 'in-use' : ''}">
+                                Fixo: R$ ${expenses.monitor.fixedValue || '0.00'}/evento
+                            </span>
+                            <span class="average-value ${expenses.monitor.source === 'average' ? 'in-use' : ''}">
+                                Média: R$ ${expenses.monitor.averageValue || '0.00'}/evento
+                            </span>
+                        </div>
+                        <div class="expense-source ${expenses.monitor.source === 'fixed' ? 'source-fixed' : 'source-average'}">
+                            ${expenses.monitor.source === 'fixed' ? 'Valor Fixo' : 'Média Aplicada'}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="expense-card ${expenses.tolls.source}">
+                    <div class="expense-header">
+                        <div class="expense-title">Pedágios</div>
+                        <div class="expense-value">R$ ${expenses.tolls.cost.toFixed(2)}/evento</div>
+                    </div>
+                    <div class="expense-details">
+                        <div>Despesas com pedágios</div>
+                        <div class="value-comparison">
+                            <span class="fixed-value ${expenses.tolls.source === 'fixed' ? 'in-use' : ''}">
+                                Fixo: R$ ${expenses.tolls.fixedValue || '0.00'}/evento
+                            </span>
+                            <span class="average-value ${expenses.tolls.source === 'average' ? 'in-use' : ''}">
+                                Média: R$ ${expenses.tolls.averageValue || '0.00'}/evento
+                            </span>
+                        </div>
+                        <div class="expense-source ${expenses.tolls.source === 'fixed' ? 'source-fixed' : 'source-average'}">
+                            ${expenses.tolls.source === 'fixed' ? 'Valor Fixo' : 'Média Aplicada'}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="expense-card average">
+                    <div class="expense-header">
+                        <div class="expense-title">Custo Total Médio</div>
+                        <div class="expense-value">R$ ${expenses.totalAverage.toFixed(2)}</div>
+                    </div>
+                    <div class="expense-details">
+                        <div>Custo médio por evento</div>
+                        <div class="expense-source source-average">
+                            Baseado nas médias históricas
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            updateStats(expenses);
+        }
+
+        function calculateExpenses(astronomer) {
+            // Calcular custo do combustível por km
+            const fuelCostPerKm = calculateFuelCost(astronomer);
+            
+            // Definir custos com lógica: usar média se disponível, senão usar valor fixo
+            const expenses = {
+                fuel: fuelCostPerKm,
+                lodging: getExpenseValue(astronomer, 'diaria_hospedagem', 'diaria_hospedagem_media'),
+                food: getExpenseValue(astronomer, 'alimentacao_diaria', 'alimentacao_diaria_media'),
+                monitor: getExpenseValue(astronomer, 'monitor', 'monitor_media'),
+                tolls: getExpenseValue(astronomer, 'pedagios', 'pedagios_media'),
+                totalAverage: astronomer.custo_total_medio || 0
+            };
+            
+            return expenses;
+        }
+
+        function calculateFuelCost(astronomer) {
+            const valorLitro = parseFloat(astronomer.valor_litro) || 5.50; // Valor padrão se não informado
+            const consumoKmL = parseFloat(astronomer.consumo_km_l) || 10; // Consumo padrão se não informado
+            const mediaCombustivel = parseFloat(astronomer.gasto_combustivel_media);
+            
+            const fixedCost = valorLitro / consumoKmL;
+            const averageCost = mediaCombustivel || null;
+            
+            return {
+                cost: averageCost !== null ? averageCost : fixedCost,
+                fixedValue: fixedCost.toFixed(2),
+                averageValue: averageCost ? averageCost.toFixed(2) : null,
+                source: averageCost !== null ? 'average' : 'fixed'
+            };
+        }
+
+        function getExpenseValue(astronomer, fixedField, averageField) {
+            const fixedValue = parseFloat(astronomer[fixedField]);
+            const averageValue = parseFloat(astronomer[averageField]);
+            
+            return {
+                cost: averageValue !== null ? averageValue : (fixedValue || 0),
+                fixedValue: fixedValue ? fixedValue.toFixed(2) : null,
+                averageValue: averageValue ? averageValue.toFixed(2) : null,
+                source: averageValue !== null ? 'average' : 'fixed'
+            };
+        }
+
+        function updateStats(expenses) {
+            // Estatísticas baseadas em um evento médio de 100km e 1 diária
+            const sampleDistance = 100;
+            const sampleDays = 1;
+            
+            const fuelCost = expenses.fuel.cost * sampleDistance;
+            const lodgingCost = expenses.lodging.cost * sampleDays;
+            const foodCost = expenses.food.cost * sampleDays;
+            const monitorCost = expenses.monitor.cost;
+            const tollsCost = expenses.tolls.cost;
+            
+            const totalCost = fuelCost + lodgingCost + foodCost + monitorCost + tollsCost;
+            const sampleEventValue = 1500; // Valor médio de evento para cálculo de margem
+            const profitMargin = sampleEventValue > 0 ? ((sampleEventValue - totalCost) / sampleEventValue * 100) : 0;
+            
+            fuelCostElement.textContent = `R$ ${fuelCost.toFixed(2)}`;
+            lodgingCostElement.textContent = `R$ ${lodgingCost.toFixed(2)}`;
+            totalExpensesElement.textContent = `R$ ${totalCost.toFixed(2)}`;
+            profitMarginElement.textContent = `${profitMargin.toFixed(1)}%`;
+        }
+
+        // ========== CÁLCULO DE ORÇAMENTO ==========
+
+        function calculateBudget() {
+            if (!selectedAstronomer) {
+                showNotification('Selecione um astrônomo primeiro', 'error');
+                return;
+            }
+            
+            const eventValue = parseFloat(eventValueInput.value);
+            const distance = parseFloat(distanceInput.value);
+            const days = parseInt(daysInput.value) || 1;
+            const students = parseInt(studentsInput.value) || 0;
+            
+            if (!eventValue || !distance) {
+                showNotification('Preencha o valor do evento e a distância', 'error');
+                return;
+            }
+            
+            // Calcular custos
+            const fuelCost = currentExpenses.fuel.cost * distance * 2; // Ida e volta
+            const lodgingCost = currentExpenses.lodging.cost * days;
+            const foodCost = currentExpenses.food.cost * days;
+            const monitorCost = currentExpenses.monitor.cost;
+            const tollsCost = currentExpenses.tolls.cost;
+            
+            const totalCost = fuelCost + lodgingCost + foodCost + monitorCost + tollsCost;
+            const profit = eventValue - totalCost;
+            const margin = eventValue > 0 ? (profit / eventValue * 100) : 0;
+            
+            // Atualizar resultados
+            resultEventValue.textContent = `R$ ${eventValue.toFixed(2)}`;
+            resultFuel.textContent = `R$ ${fuelCost.toFixed(2)}`;
+            resultLodging.textContent = `R$ ${lodgingCost.toFixed(2)}`;
+            resultFood.textContent = `R$ ${foodCost.toFixed(2)}`;
+            resultMonitor.textContent = `R$ ${monitorCost.toFixed(2)}`;
+            resultTolls.textContent = `R$ ${tollsCost.toFixed(2)}`;
+            resultTotalCost.textContent = `R$ ${totalCost.toFixed(2)}`;
+            resultProfit.textContent = `R$ ${profit.toFixed(2)}`;
+            resultMargin.textContent = `${margin.toFixed(1)}%`;
+            
+            // Colorir o lucro baseado no valor
+            resultProfit.style.color = profit >= 0 ? '#4caf50' : '#f44336';
+            resultMargin.style.color = margin >= 20 ? '#4caf50' : margin >= 10 ? '#ff9800' : '#f44336';
+            
+            calculationResults.style.display = 'block';
+            showNotification('Orçamento calculado com sucesso!', 'success');
+        }
+
+        function showNotification(message, type) {
+            notification.textContent = message;
+            notification.className = `notification ${type} show`;
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 5000);
+        }
+    </script>
+</body>
+</html>
